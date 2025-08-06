@@ -75,10 +75,30 @@
     <canvas id="salesChart"></canvas>
   </div>
   <script>
-    async function fetchKPIs() {
-      const res = await fetch('https://TU_N8N_HOST/api/kpis-extended');
-      return res.json();
-    }
+    // ========= DATOS DE PRUEBA para la vista =========
+    const ejemplo = {
+      total: 120,
+      approved: 95,
+      rejected: 25,
+      rate: 79.2,
+      topReason: 'Producto roto',
+      topProduct: 'Bolsa 40x50',
+      bestSeller: 'Caja de regalo',
+      reasons: [
+        { reason: 'Producto roto', count: 15 },
+        { reason: 'Talla equivocada', count: 10 },
+        { reason: 'Color distinto', count: 5 },
+      ],
+      returnsByProduct: [
+        { product: 'Bolsa 40x50', count: 12 },
+        { product: 'Mochila deportiva', count: 8 },
+      ],
+      salesByProduct: [
+        { product: 'Caja de regalo', count: 50 },
+        { product: 'Set de tazas', count: 30 },
+      ],
+    };
+
     function renderKPIs(data) {
       document.getElementById('total').textContent      = data.total;
       document.getElementById('approved').textContent   = data.approved;
@@ -87,25 +107,58 @@
       document.getElementById('topReason').textContent  = data.topReason;
       document.getElementById('topProduct').textContent = data.topProduct;
       document.getElementById('bestSeller').textContent = data.bestSeller;
+
       new Chart(document.getElementById('approvalChart'), {
         type: 'doughnut',
-        data: { labels: ['Aprobadas','Rechazadas'], datasets:[{ data:[data.approved,data.rejected], backgroundColor:['#4caf50','#e74c3c'] }] }
+        data: {
+          labels: ['Aprobadas','Rechazadas'],
+          datasets: [{
+            data: [data.approved,data.rejected],
+            backgroundColor:['#4caf50','#e74c3c']
+          }]
+        }
       });
       new Chart(document.getElementById('reasonsChart'), {
         type:'bar',
-        data:{ labels:data.reasons.map(r=>r.reason), datasets:[{ label:'Motivos', data:data.reasons.map(r=>r.count) }] },
+        data:{
+          labels: data.reasons.map(r=>r.reason),
+          datasets:[{
+            label:'Motivos',
+            data: data.reasons.map(r=>r.count)
+          }]
+        },
         options:{ indexAxis:'y' }
       });
       new Chart(document.getElementById('returnsChart'), {
         type:'bar',
-        data:{ labels:data.returnsByProduct.map(p=>p.product), datasets:[{ label:'Devoluciones', data:data.returnsByProduct.map(p=>p.count) }] }
+        data:{
+          labels: data.returnsByProduct.map(p=>p.product),
+          datasets:[{
+            label:'Devoluciones',
+            data: data.returnsByProduct.map(p=>p.count)
+          }]
+        }
       });
       new Chart(document.getElementById('salesChart'), {
         type:'line',
-        data:{ labels:data.salesByProduct.map(p=>p.product), datasets:[{ label:'Ventas', data:data.salesByProduct.map(p=>p.count), fill:false, tension:0.3 }] }
+        data:{
+          labels: data.salesByProduct.map(p=>p.product),
+          datasets:[{
+            label:'Ventas',
+            data: data.salesByProduct.map(p=>p.count),
+            fill:false,
+            tension:0.3
+          }]
+        }
       });
     }
-    fetchKPIs().then(renderKPIs).catch(console.error);
+
+    // RENDER de prueba:
+    renderKPIs(ejemplo);
+
+    // Cuando quieras usar datos reales, coméntalo y descomenta esto:
+    // fetchKPIs().then(renderKPIs).catch(console.error);
   </script>
+
 </body>
 </html>

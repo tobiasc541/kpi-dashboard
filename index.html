@@ -70,19 +70,29 @@ h1, h2 {
   font-weight: 700;
 }
 
-/* GRÁFICOS */
+/* GRÁFICOS: cada canvas en su propia celda, con altura mínima */
 #charts {
   margin-top: 50px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  /* filas automáticas de al menos 300px de alto */
+  grid-auto-rows: minmax(300px, auto);
   gap: 30px;
+  width: 100%;
 }
+
+/* Cada chart ocupa toda su celda sin salirse */
 canvas {
+  width: 100% !important;
+  height: 100% !important;
   background: rgba(255,255,255,0.08);
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+  position: relative;
+  z-index: 1;
 }
+
 
   </style>
 </head>

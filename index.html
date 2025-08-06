@@ -74,31 +74,19 @@
     <canvas id="returnsChart"></canvas>
     <canvas id="salesChart"></canvas>
   </div>
-  <script>
-    // ========= DATOS DE PRUEBA para la vista =========
-    const ejemplo = {
-      total: 120,
-      approved: 95,
-      rejected: 25,
-      rate: 79.2,
-      topReason: 'Producto roto',
-      topProduct: 'Bolsa 40x50',
-      bestSeller: 'Caja de regalo',
-      reasons: [
-        { reason: 'Producto roto', count: 15 },
-        { reason: 'Talla equivocada', count: 10 },
-        { reason: 'Color distinto', count: 5 },
-      ],
-      returnsByProduct: [
-        { product: 'Bolsa 40x50', count: 12 },
-        { product: 'Mochila deportiva', count: 8 },
-      ],
-      salesByProduct: [
-        { product: 'Caja de regalo', count: 50 },
-        { product: 'Set de tazas', count: 30 },
-      ],
-    };
 
+  <script>
+    // === URL DE TU WEBHOOK EN N8N ===
+    const N8N_WEBHOOK = 'https://TU_N8N_HOST/api/webhook/TU_WEBHOOK_PATH';
+
+    // === Función para traer datos reales de n8n ===
+    async function fetchKPIs() {
+      const res = await fetch(N8N_WEBHOOK);
+      if (!res.ok) throw new Error('Error al obtener KPIs: ' + res.status);
+      return await res.json();
+    }
+
+    // === Render de los KPIs en pantalla ===
     function renderKPIs(data) {
       document.getElementById('total').textContent      = data.total;
       document.getElementById('approved').textContent   = data.approved;
@@ -153,12 +141,35 @@
       });
     }
 
-    // RENDER de prueba:
+    // === DATOS DE PRUEBA (solo para ver la estética) ===
+    const ejemplo = {
+      total: 134,
+      approved: 102,
+      rejected: 32,
+      rate: 76.1,
+      topReason: 'Talla equivocada',
+      topProduct: 'Camiseta Retro',
+      bestSeller: 'Gorra Épica',
+      reasons: [
+        { reason: 'Talla equivocada', count: 18 },
+        { reason: 'Color distinto', count: 10 },
+        { reason: 'Producto dañado', count: 4 },
+      ],
+      returnsByProduct: [
+        { product: 'Camiseta Retro', count: 12 },
+        { product: 'Pantalón Clásico', count: 8 },
+      ],
+      salesByProduct: [
+        { product: 'Gorra Épica', count: 60 },
+        { product: 'Calcetines Míticos', count: 45 },
+      ],
+    };
+
+    // === Al cargar: muestra datos de prueba ===
     renderKPIs(ejemplo);
 
-    // Cuando quieras usar datos reales, coméntalo y descomenta esto:
+    // === Cuando quieras datos reales, comenta la línea anterior y descomenta esta: ===
     // fetchKPIs().then(renderKPIs).catch(console.error);
   </script>
-
 </body>
 </html>

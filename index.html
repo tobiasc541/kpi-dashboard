@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Épico de KPIs</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    /* Reset y tipografía */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(135deg, #4a90e2, #8e44ad);
+      color: #f0f0f0;
+      padding: 20px;
+    }
+    h1, h2 {
+      font-family: 'Cinzel', serif;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    .header { text-align: center; margin-bottom: 40px; }
+    .header p { font-size: 1.1rem; margin-top: 8px; color: #e0e0e0; }
+    .border-bottom { border-bottom: 2px solid rgba(255,255,255,0.5); margin: 20px auto; width: 80%; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      backdrop-filter: blur(5px);
+      text-align: center;
+    }
+    .card h2 { font-size: 1.2rem; margin-bottom: 10px; }
+    .card p { font-size: 2rem; font-weight: 600; }
+    #charts {
+      margin-top: 50px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+    canvas {
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🛡️ Dashboard Mítico de KPIs 🗡️</h1>
+    <p>Visión épica de las devoluciones y motivaciones</p>
+    <div class="border-bottom"></div>
+  </div>
+  <div class="cards">
+    <div class="card"><h2>Total de Solicitudes</h2><p id="total">–</p></div>
+    <div class="card"><h2>Aprobadas</h2><p id="approved">–</p></div>
+    <div class="card"><h2>Rechazadas</h2><p id="rejected">–</p></div>
+    <div class="card"><h2>Tasa de Aprobación</h2><p id="rate">–</p></div>
+    <div class="card"><h2>Motivo Principal</h2><p id="topReason">–</p></div>
+    <div class="card"><h2>Producto con Más Devoluciones</h2><p id="topProduct">–</p></div>
+    <div class="card"><h2>Producto más Vendido</h2><p id="bestSeller">–</p></div>
+  </div>
+  <div id="charts">
+    <canvas id="approvalChart"></canvas>
+    <canvas id="reasonsChart"></canvas>
+    <canvas id="returnsChart"></canvas>
+    <canvas id="salesChart"></canvas>
+  </div>
+  <script>
+    async function fetchKPIs() {
+      const res = await fetch('https://TU_N8N_HOST/api/kpis-extended');
+      return res.json();
+    }
+    function renderKPIs(data) {
+      document.getElementById('total').textContent      = data.total;
+      document.getElementById('approved').textContent   = data.approved;
+      document.getElementById('rejected').textContent   = data.rejected;
+      document.getElementById('rate').textContent       = data.rate.toFixed(1) + '%';
+      document.getElementById('topReason').textContent  = data.topReason;
+      document.getElementById('topProduct').textContent = data.topProduct;
+      document.getElementById('bestSeller').textContent = data.bestSeller;
+      new Chart(document.getElementById('approvalChart'), {
+        type: 'doughnut',
+        data: { labels: ['Aprobadas','Rechazadas'], datasets:[{ data:[data.approved,data.rejected], backgroundColor:['#4caf50','#e74c3c'] }] }
+      });
+      new Chart(document.getElementById('reasonsChart'), {
+        type:'bar',
+        data:{ labels:data.reasons.map(r=>r.reason), datasets:[{ label:'Motivos', data:data.reasons.map(r=>r.count) }] },
+        options:{ indexAxis:'y' }
+      });
+      new Chart(document.getElementById('returnsChart'), {
+        type:'bar',
+        data:{ labels:data.returnsByProduct.map(p=>p.product), datasets:[{ label:'Devoluciones', data:data.returnsByProduct.map(p=>p.count) }] }
+      });
+      new Chart(document.getElementById('salesChart'), {
+        type:'line',
+        data:{ labels:data.salesByProduct.map(p=>p.product), datasets:[{ label:'Ventas', data:data.salesByProduct.map(p=>p.count), fill:false, tension:0.3 }] }
+      });
+    }
+    fetchKPIs().then(renderKPIs).catch(console.error);
+  </script>
+</body>
+</html>

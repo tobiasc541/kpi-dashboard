@@ -1,171 +1,218 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard de KPIs Épico</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- React + ReactDOM -->
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <!-- Recharts UMD -->
-  <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
-  <!-- Babel para JSX en navegador -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard Épico de KPIs</title>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Tipografías -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    /* Reset y tipografía */
+    * { box-sizing: border-box; margin:0; padding:0; }
+    body {
+      font-family:'Montserrat',sans-serif;
+      background: linear-gradient(135deg,#4a90e2,#8e44ad);
+      color:#f0f0f0;
+      padding:20px;
+    }
+    h1,h2 { font-family:'Cinzel',serif; color:#fff; text-shadow:2px 2px 4px rgba(0,0,0,0.5); }
+    .header { text-align:center; margin-bottom:30px; }
+    .header p { color:#e0e0e0; margin-top:8px; }
+    .underline { width:80%; margin:20px auto; border-bottom:2px solid rgba(255,255,255,0.5); }
+    .cards {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+      gap:20px;
+    }
+    .card {
+      background:rgba(255,255,255,0.1);
+      border:1px solid rgba(255,255,255,0.2);
+      border-radius:12px;
+      padding:20px;
+      text-align:center;
+      box-shadow:0 8px 16px rgba(0,0,0,0.3);
+      backdrop-filter:blur(5px);
+    }
+    .card h2 { font-size:1.1rem; margin-bottom:10px; }
+    .card p { font-size:1.8rem; font-weight:600; }
+    #charts {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:30px;
+      margin-top:40px;
+    }
+    canvas {
+      background:rgba(255,255,255,0.1);
+      border-radius:12px;
+      padding:20px;
+      box-shadow:0 8px 16px rgba(0,0,0,0.3);
+    }
+  </style>
 </head>
-<body class="bg-gray-50 font-sans">
-  <div id="root" class="min-h-screen p-8"></div>
+<body>
 
-  <script type="text/babel">
-    const { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } = Recharts;
+  <div class="header">
+    <h1>Dashboard Épico de KPIs</h1>
+    <p>Visión épica de tu negocio</p>
+    <div class="underline"></div>
+  </div>
 
-    // Datos de ejemplo
-    const mockKPIs = {
-      total: 150,
-      approved: 110,
-      rejected: 40,
-      approvalRate: 73.3,
-      aov: 45.7,
-      topReason: 'Talla equivocada',
-      topProductReturns: 'Camiseta Retro',
-      topProductSales: 'Gorra Clásica',
-      reasonOfTopProduct: 'Color no coincide',
-      scheduledToday: 32,
-      scheduledWeek: 120,
-      effectiveTurns: 110,
-      repeatCustomersRate: 28.5,
-      totalReturns: 40,
+  <div class="cards">
+    <div class="card"><h2>Total de Solicitudes</h2><p id="total">–</p></div>
+    <div class="card"><h2>Solicitudes Aprobadas</h2><p id="approved">–</p></div>
+    <div class="card"><h2>Solicitudes Rechazadas</h2><p id="rejected">–</p></div>
+    <div class="card"><h2>Tasa de Aprobación</h2><p id="rate">–</p></div>
+    <div class="card"><h2>Valor Medio de Pedido (AOV)</h2><p id="aov">–</p></div>
+    <div class="card"><h2>Producto con Más Devoluciones</h2><p id="topReturns">–</p></div>
+    <div class="card"><h2>Motivo Principal de Devolución</h2><p id="topReason">–</p></div>
+    <div class="card"><h2>Producto Más Vendido</h2><p id="bestSeller">–</p></div>
+    <div class="card"><h2>Razón de Elección del Más Vendido</h2><p id="whyBest">–</p></div>
+    <div class="card"><h2>Turnos Hoy / Semana</h2><p id="shifts">–</p></div>
+    <div class="card"><h2>Turnos Efectivos (%)</h2><p id="efficiency">–</p></div>
+    <div class="card"><h2>Clientes Recurrentes</h2><p id="repeaters">–</p></div>
+    <div class="card"><h2>Devoluciones Totales</h2><p id="returnsTotal">–</p></div>
+    <div class="card"><h2>Reclamos Activos</h2><p id="activeClaims">–</p></div>
+    <div class="card"><h2>Tiempo Medio Respuesta</h2><p id="responseTime">–</p></div>
+    <div class="card"><h2>Coste por Adquisición (CAC)</h2><p id="cac">–</p></div>
+    <div class="card"><h2>Tasa de Recompra</h2><p id="rebuyRate">–</p></div>
+    <div class="card"><h2>Tasa de Devolución</h2><p id="returnRate">–</p></div>
+    <div class="card"><h2>Tickets Resueltos 1° Contacto</h2><p id="firstContact">–</p></div>
+  </div>
+
+  <div id="charts">
+    <canvas id="chartShifts"></canvas>
+    <canvas id="chartSales"></canvas>
+    <canvas id="chartReturnsByProduct"></canvas>
+    <canvas id="chartReasons"></canvas>
+  </div>
+
+  <script>
+    // ===== Datos de prueba (mock) =====
+    const dataMock = {
+      total: 320,
+      approved: 240,
+      rejected: 80,
+      rate: 75.0,
+      aov: 45.60,
+      topReturns: 'Bolsa 40x50',
+      topReason: 'Producto roto',
+      bestSeller: 'Caja de regalo',
+      whyBest: 'Packaging atractivo',
+      shifts: '18 / 25',
+      efficiency: 72,
+      repeaters: 54,
+      returnsTotal: 98,
       activeClaims: 12,
-      avgResponseTime: '2h 15m',
-      cac: 1.2,
-      repurchaseRate: 34.0,
-      returnRate: 8.5,
-      firstTouchResolution: 65.0,
+      responseTime: '2h 30m',
+      cac: '$3.20',
+      rebuyRate: 28,
+      returnRate: 30,
+      firstContact: 85,
+      shiftsByDay: [
+        { day:'Lun', count:5 },
+        { day:'Mar', count:7 },
+        { day:'Mié', count:4 },
+        { day:'Jue', count:6 },
+        { day:'Vie', count:8 },
+        { day:'Sáb', count:3 },
+        { day:'Dom', count:2 },
+      ],
+      salesByProduct: [
+        { product:'Caja de regalo', count:120 },
+        { product:'Set de tazas', count:80 },
+        { product:'Mochila', count:60 },
+      ],
+      returnsByProduct: [
+        { product:'Bolsa 40x50', count:30 },
+        { product:'Camiseta', count:20 },
+        { product:'Taza', count:10 },
+      ],
+      reasons: [
+        { reason:'Producto roto', count:30 },
+        { reason:'Talla equivocada', count:25 },
+        { reason:'Color distinto', count:15 },
+      ],
     };
 
-    const mockDataTurns = [
-      { day: 'Lun', volume: 20 },
-      { day: 'Mar', volume: 25 },
-      { day: 'Mié', volume: 30 },
-      { day: 'Jue', volume: 15 },
-      { day: 'Vie', volume: 40 },
-      { day: 'Sáb', volume: 10 },
-      { day: 'Dom', volume: 10 },
-    ];
+    function renderKPIs(d) {
+      document.getElementById('total').textContent = d.total;
+      document.getElementById('approved').textContent = d.approved;
+      document.getElementById('rejected').textContent = d.rejected;
+      document.getElementById('rate').textContent = d.rate.toFixed(1)+'%';
+      document.getElementById('aov').textContent = '$'+d.aov.toFixed(2);
+      document.getElementById('topReturns').textContent = d.topReturns;
+      document.getElementById('topReason').textContent = d.topReason;
+      document.getElementById('bestSeller').textContent = d.bestSeller;
+      document.getElementById('whyBest').textContent = d.whyBest;
+      document.getElementById('shifts').textContent = d.shifts;
+      document.getElementById('efficiency').textContent = d.efficiency+'%';
+      document.getElementById('repeaters').textContent = d.repeaters;
+      document.getElementById('returnsTotal').textContent = d.returnsTotal;
+      document.getElementById('activeClaims').textContent = d.activeClaims;
+      document.getElementById('responseTime').textContent = d.responseTime;
+      document.getElementById('cac').textContent = d.cac;
+      document.getElementById('rebuyRate').textContent = d.rebuyRate+'%';
+      document.getElementById('returnRate').textContent = d.returnRate+'%';
+      document.getElementById('firstContact').textContent = d.firstContact+'%';
 
-    const mockDataSales = [
-      { name: 'Gorra Clásica', sales: 80 },
-      { name: 'Camiseta Retro', sales: 60 },
-      { name: 'Pantalón Urbano', sales: 50 },
-    ];
+      // Gráfico turnos por día
+      new Chart(document.getElementById('chartShifts'), {
+        type:'bar',
+        data:{
+          labels:d.shiftsByDay.map(x=>x.day),
+          datasets:[{
+            label:'Turnos',
+            data:d.shiftsByDay.map(x=>x.count),
+            backgroundColor:'#4caf50'
+          }]
+        }
+      });
 
-    const mockDataReturns = [
-      { name: 'Camiseta Retro', returns: 20 },
-      { name: 'Gorra Clásica', returns: 15 },
-      { name: 'Pantalón Urbano', returns: 5 },
-    ];
+      // Gráfico ventas por producto (torta)
+      new Chart(document.getElementById('chartSales'), {
+        type:'doughnut',
+        data:{
+          labels:d.salesByProduct.map(x=>x.product),
+          datasets:[{
+            data:d.salesByProduct.map(x=>x.count),
+            backgroundColor:['#3498db','#9b59b6','#f1c40f']
+          }]
+        }
+      });
 
-    const mockDataClaims = [
-      { reason: 'Color no coincide', count: 12 },
-      { reason: 'Producto dañado', count: 8 },
-      { reason: 'Talla equivocada', count: 5 },
-    ];
+      // Gráfico devolutions by product
+      new Chart(document.getElementById('chartReturnsByProduct'), {
+        type:'bar',
+        data:{
+          labels:d.returnsByProduct.map(x=>x.product),
+          datasets:[{
+            label:'Devoluciones',
+            data:d.returnsByProduct.map(x=>x.count),
+            backgroundColor:'#e74c3c'
+          }]
+        }
+      });
 
-    const colors = ['#4F46E5', '#EC4899', '#F59E0B', '#10B981', '#EF4444'];
-
-    function Dashboard() {
-      const data = mockKPIs; // Puedes reemplazar por fetch real
-
-      return (
-        <div>
-          <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">Dashboard de KPIs</h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            {[
-              { label: 'Total Solicitudes', value: data.total },
-              { label: 'Aprobadas', value: data.approved },
-              { label: 'Rechazadas', value: data.rejected },
-              { label: 'Tasa de Aprobación', value: `${data.approvalRate}%` },
-              { label: 'AOV ($/pedido)', value: `€${data.aov}` },
-              { label: 'Clientes Recurrentes', value: `${data.repeatCustomersRate}%` },
-              { label: 'Devoluciones Totales', value: data.totalReturns },
-              { label: 'Reclamos Activos', value: data.activeClaims },
-              { label: 'Tiempo Respuesta', value: data.avgResponseTime },
-              { label: 'CAC ($/cliente)', value: `€${data.cac}` },
-              { label: 'Tasa Recompra', value: `${data.repurchaseRate}%` },
-              { label: 'Tasa Devolución', value: `${data.returnRate}%` },
-              { label: 'First-touch (%)', value: `${data.firstTouchResolution}%` },
-              { label: 'Turnos Hoy / Semana', value: `${data.scheduledToday} / ${data.scheduledWeek}` },
-              { label: 'Turnos Efectivos (%)', value: `${((data.effectiveTurns/data.scheduledWeek)*100).toFixed(1)}%` },
-              { label: 'Motivo Principal Dev.', value: data.topReason },
-              { label: 'Producto con Más Devoluciones', value: data.topProductReturns },
-              { label: 'Motivo de ese Producto', value: data.reasonOfTopProduct },
-              { label: 'Producto Más Vendido', value: data.topProductSales },
-            ].map((item, idx) => (
-              <div key={idx} className="bg-white rounded-xl p-6 shadow">
-                <h2 className="text-lg text-gray-600 mb-2">{item.label}</h2>
-                <p className="text-2xl font-semibold text-gray-900">{item.value}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded-xl shadow">
-              <h3 className="text-xl font-bold mb-4 text-gray-800">Turnos por Día</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={mockDataTurns} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <Tooltip />
-                  <Bar dataKey="volume" fill={colors[0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow">
-              <h3 className="text-xl font-bold mb-4 text-gray-800">Productos Más Vendidos</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie data={mockDataSales} dataKey="sales" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
-                    {mockDataSales.map((entry, idx) => (<Cell key={`cell-${idx}`} fill={colors[idx % colors.length]} />))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow">
-              <h3 className="text-xl font-bold mb-4 text-gray-800">Producto con Más Fallas</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={mockDataReturns} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                  <XAxis type="number" />
-                  <YAxis dataKey="name" type="category" />
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <Tooltip />
-                  <Bar dataKey="returns" fill={colors[1]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow">
-              <h3 className="text-xl font-bold mb-4 text-gray-800">Quejas Más Comunes</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={mockDataClaims} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                  <XAxis type="number" />
-                  <YAxis dataKey="reason" type="category" />
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <Tooltip />
-                  <Bar dataKey="count" fill={colors[2]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-      );
+      // Gráfico motivos
+      new Chart(document.getElementById('chartReasons'), {
+        type:'horizontalBar',
+        data:{
+          labels:d.reasons.map(x=>x.reason),
+          datasets:[{
+            label:'Motivos',
+            data:d.reasons.map(x=>x.count),
+            backgroundColor:'#f39c12'
+          }]
+        },
+        options:{ scales:{ x:{ beginAtZero:true } } }
+      });
     }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<Dashboard />);
+    // Renderizamos con mock
+    renderKPIs(dataMock);
   </script>
+
 </body>
 </html>

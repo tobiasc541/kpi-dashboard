@@ -1,175 +1,171 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Épico de KPIs</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet" />
-  <style>
-    /* Reset y tipografía */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background: linear-gradient(135deg, #4a90e2, #8e44ad);
-      color: #f0f0f0;
-      padding: 20px;
-    }
-    h1, h2 {
-      font-family: 'Cinzel', serif;
-      color: #fff;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    }
-    .header { text-align: center; margin-bottom: 40px; }
-    .header p { font-size: 1.1rem; margin-top: 8px; color: #e0e0e0; }
-    .border-bottom { border-bottom: 2px solid rgba(255,255,255,0.5); margin: 20px auto; width: 80%; }
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-    }
-    .card {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-      backdrop-filter: blur(5px);
-      text-align: center;
-    }
-    .card h2 { font-size: 1.2rem; margin-bottom: 10px; }
-    .card p { font-size: 2rem; font-weight: 600; }
-    #charts {
-      margin-top: 50px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 40px;
-    }
-    canvas {
-      background: rgba(255,255,255,0.1);
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard de KPIs Épico</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React + ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <!-- Recharts UMD -->
+  <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
+  <!-- Babel para JSX en navegador -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body>
-  <div class="header">
-    <h1>🛡️ Dashboard Mítico de KPIs 🗡️</h1>
-    <p>Visión épica de las devoluciones y motivaciones</p>
-    <div class="border-bottom"></div>
-  </div>
-  <div class="cards">
-    <div class="card"><h2>Total de Solicitudes</h2><p id="total">–</p></div>
-    <div class="card"><h2>Aprobadas</h2><p id="approved">–</p></div>
-    <div class="card"><h2>Rechazadas</h2><p id="rejected">–</p></div>
-    <div class="card"><h2>Tasa de Aprobación</h2><p id="rate">–</p></div>
-    <div class="card"><h2>Motivo Principal</h2><p id="topReason">–</p></div>
-    <div class="card"><h2>Producto con Más Devoluciones</h2><p id="topProduct">–</p></div>
-    <div class="card"><h2>Producto más Vendido</h2><p id="bestSeller">–</p></div>
-  </div>
-  <div id="charts">
-    <canvas id="approvalChart"></canvas>
-    <canvas id="reasonsChart"></canvas>
-    <canvas id="returnsChart"></canvas>
-    <canvas id="salesChart"></canvas>
-  </div>
+<body class="bg-gray-50 font-sans">
+  <div id="root" class="min-h-screen p-8"></div>
 
-  <script>
-    // === URL DE TU WEBHOOK EN N8N ===
-    const N8N_WEBHOOK = 'https://TU_N8N_HOST/api/webhook/TU_WEBHOOK_PATH';
+  <script type="text/babel">
+    const { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } = Recharts;
 
-    // === Función para traer datos reales de n8n ===
-    async function fetchKPIs() {
-      const res = await fetch(N8N_WEBHOOK);
-      if (!res.ok) throw new Error('Error al obtener KPIs: ' + res.status);
-      return await res.json();
-    }
-
-    // === Render de los KPIs en pantalla ===
-    function renderKPIs(data) {
-      document.getElementById('total').textContent      = data.total;
-      document.getElementById('approved').textContent   = data.approved;
-      document.getElementById('rejected').textContent   = data.rejected;
-      document.getElementById('rate').textContent       = data.rate.toFixed(1) + '%';
-      document.getElementById('topReason').textContent  = data.topReason;
-      document.getElementById('topProduct').textContent = data.topProduct;
-      document.getElementById('bestSeller').textContent = data.bestSeller;
-
-      new Chart(document.getElementById('approvalChart'), {
-        type: 'doughnut',
-        data: {
-          labels: ['Aprobadas','Rechazadas'],
-          datasets: [{
-            data: [data.approved,data.rejected],
-            backgroundColor:['#4caf50','#e74c3c']
-          }]
-        }
-      });
-      new Chart(document.getElementById('reasonsChart'), {
-        type:'bar',
-        data:{
-          labels: data.reasons.map(r=>r.reason),
-          datasets:[{
-            label:'Motivos',
-            data: data.reasons.map(r=>r.count)
-          }]
-        },
-        options:{ indexAxis:'y' }
-      });
-      new Chart(document.getElementById('returnsChart'), {
-        type:'bar',
-        data:{
-          labels: data.returnsByProduct.map(p=>p.product),
-          datasets:[{
-            label:'Devoluciones',
-            data: data.returnsByProduct.map(p=>p.count)
-          }]
-        }
-      });
-      new Chart(document.getElementById('salesChart'), {
-        type:'line',
-        data:{
-          labels: data.salesByProduct.map(p=>p.product),
-          datasets:[{
-            label:'Ventas',
-            data: data.salesByProduct.map(p=>p.count),
-            fill:false,
-            tension:0.3
-          }]
-        }
-      });
-    }
-
-    // === DATOS DE PRUEBA (solo para ver la estética) ===
-    const ejemplo = {
-      total: 134,
-      approved: 102,
-      rejected: 32,
-      rate: 76.1,
+    // Datos de ejemplo
+    const mockKPIs = {
+      total: 150,
+      approved: 110,
+      rejected: 40,
+      approvalRate: 73.3,
+      aov: 45.7,
       topReason: 'Talla equivocada',
-      topProduct: 'Camiseta Retro',
-      bestSeller: 'Gorra Épica',
-      reasons: [
-        { reason: 'Talla equivocada', count: 18 },
-        { reason: 'Color distinto', count: 10 },
-        { reason: 'Producto dañado', count: 4 },
-      ],
-      returnsByProduct: [
-        { product: 'Camiseta Retro', count: 12 },
-        { product: 'Pantalón Clásico', count: 8 },
-      ],
-      salesByProduct: [
-        { product: 'Gorra Épica', count: 60 },
-        { product: 'Calcetines Míticos', count: 45 },
-      ],
+      topProductReturns: 'Camiseta Retro',
+      topProductSales: 'Gorra Clásica',
+      reasonOfTopProduct: 'Color no coincide',
+      scheduledToday: 32,
+      scheduledWeek: 120,
+      effectiveTurns: 110,
+      repeatCustomersRate: 28.5,
+      totalReturns: 40,
+      activeClaims: 12,
+      avgResponseTime: '2h 15m',
+      cac: 1.2,
+      repurchaseRate: 34.0,
+      returnRate: 8.5,
+      firstTouchResolution: 65.0,
     };
 
-    // === Al cargar: muestra datos de prueba ===
-    renderKPIs(ejemplo);
+    const mockDataTurns = [
+      { day: 'Lun', volume: 20 },
+      { day: 'Mar', volume: 25 },
+      { day: 'Mié', volume: 30 },
+      { day: 'Jue', volume: 15 },
+      { day: 'Vie', volume: 40 },
+      { day: 'Sáb', volume: 10 },
+      { day: 'Dom', volume: 10 },
+    ];
 
-    // === Cuando quieras datos reales, comenta la línea anterior y descomenta esta: ===
-    // fetchKPIs().then(renderKPIs).catch(console.error);
+    const mockDataSales = [
+      { name: 'Gorra Clásica', sales: 80 },
+      { name: 'Camiseta Retro', sales: 60 },
+      { name: 'Pantalón Urbano', sales: 50 },
+    ];
+
+    const mockDataReturns = [
+      { name: 'Camiseta Retro', returns: 20 },
+      { name: 'Gorra Clásica', returns: 15 },
+      { name: 'Pantalón Urbano', returns: 5 },
+    ];
+
+    const mockDataClaims = [
+      { reason: 'Color no coincide', count: 12 },
+      { reason: 'Producto dañado', count: 8 },
+      { reason: 'Talla equivocada', count: 5 },
+    ];
+
+    const colors = ['#4F46E5', '#EC4899', '#F59E0B', '#10B981', '#EF4444'];
+
+    function Dashboard() {
+      const data = mockKPIs; // Puedes reemplazar por fetch real
+
+      return (
+        <div>
+          <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">Dashboard de KPIs</h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            {[
+              { label: 'Total Solicitudes', value: data.total },
+              { label: 'Aprobadas', value: data.approved },
+              { label: 'Rechazadas', value: data.rejected },
+              { label: 'Tasa de Aprobación', value: `${data.approvalRate}%` },
+              { label: 'AOV ($/pedido)', value: `€${data.aov}` },
+              { label: 'Clientes Recurrentes', value: `${data.repeatCustomersRate}%` },
+              { label: 'Devoluciones Totales', value: data.totalReturns },
+              { label: 'Reclamos Activos', value: data.activeClaims },
+              { label: 'Tiempo Respuesta', value: data.avgResponseTime },
+              { label: 'CAC ($/cliente)', value: `€${data.cac}` },
+              { label: 'Tasa Recompra', value: `${data.repurchaseRate}%` },
+              { label: 'Tasa Devolución', value: `${data.returnRate}%` },
+              { label: 'First-touch (%)', value: `${data.firstTouchResolution}%` },
+              { label: 'Turnos Hoy / Semana', value: `${data.scheduledToday} / ${data.scheduledWeek}` },
+              { label: 'Turnos Efectivos (%)', value: `${((data.effectiveTurns/data.scheduledWeek)*100).toFixed(1)}%` },
+              { label: 'Motivo Principal Dev.', value: data.topReason },
+              { label: 'Producto con Más Devoluciones', value: data.topProductReturns },
+              { label: 'Motivo de ese Producto', value: data.reasonOfTopProduct },
+              { label: 'Producto Más Vendido', value: data.topProductSales },
+            ].map((item, idx) => (
+              <div key={idx} className="bg-white rounded-xl p-6 shadow">
+                <h2 className="text-lg text-gray-600 mb-2">{item.label}</h2>
+                <p className="text-2xl font-semibold text-gray-900">{item.value}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-white p-6 rounded-xl shadow">
+              <h3 className="text-xl font-bold mb-4 text-gray-800">Turnos por Día</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={mockDataTurns} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                  <XAxis dataKey="day" />
+                  <YAxis />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <Tooltip />
+                  <Bar dataKey="volume" fill={colors[0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow">
+              <h3 className="text-xl font-bold mb-4 text-gray-800">Productos Más Vendidos</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie data={mockDataSales} dataKey="sales" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
+                    {mockDataSales.map((entry, idx) => (<Cell key={`cell-${idx}`} fill={colors[idx % colors.length]} />))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow">
+              <h3 className="text-xl font-bold mb-4 text-gray-800">Producto con Más Fallas</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={mockDataReturns} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                  <XAxis type="number" />
+                  <YAxis dataKey="name" type="category" />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <Tooltip />
+                  <Bar dataKey="returns" fill={colors[1]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow">
+              <h3 className="text-xl font-bold mb-4 text-gray-800">Quejas Más Comunes</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={mockDataClaims} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                  <XAxis type="number" />
+                  <YAxis dataKey="reason" type="category" />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <Tooltip />
+                  <Bar dataKey="count" fill={colors[2]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<Dashboard />);
   </script>
 </body>
 </html>
